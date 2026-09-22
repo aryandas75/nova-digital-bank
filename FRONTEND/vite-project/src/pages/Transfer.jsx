@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import { findAccountByEmail } from "../api/account.api";
+import {
+    findAccountByEmail,
+    getMyAccount,
+} from "../api/account.api";
 import { createTransaction } from "../api/transaction.api";
 
 function Transfer() {
@@ -19,6 +22,7 @@ function Transfer() {
 
     const [step, setStep] = useState(1);
 
+    // Find receiver using email
     const findReceiver = async (e) => {
         e.preventDefault();
 
@@ -43,6 +47,7 @@ function Transfer() {
 
             setError(
                 err.response?.data?.message ||
+                err.message ||
                 "Unable to find this account."
             );
         } finally {
@@ -50,6 +55,7 @@ function Transfer() {
         }
     };
 
+    // Continue to amount
     const continueToAmount = () => {
         setError("");
 
@@ -61,6 +67,7 @@ function Transfer() {
         setStep(2);
     };
 
+    // Continue to review
     const continueToReview = () => {
         setError("");
 
@@ -79,6 +86,7 @@ function Transfer() {
         setStep(3);
     };
 
+    // Send money
     const sendMoney = async () => {
         try {
             setSending(true);
@@ -86,24 +94,14 @@ function Transfer() {
             setSuccess("");
 
             /*
-             * Your backend needs the sender's account ID.
-             * We fetch the current user's account here.
+             * Get the logged-in user's bank account.
+             *
+             * IMPORTANT:
+             * We are NOT using localhost here.
+             * getMyAccount() uses your Axios instance,
+             * which uses VITE_API_URL.
              */
-            const accountResponse = await fetch(
-                "http://localhost:3000/api/account",
-                {
-                    credentials: "include",
-                }
-            );
-
-            const accountData = await accountResponse.json();
-
-            if (!accountResponse.ok) {
-                throw new Error(
-                    accountData.message ||
-                    "Unable to load your account."
-                );
-            }
+            const accountData = await getMyAccount();
 
             const senderAccount =
                 accountData.account?.find(
@@ -117,11 +115,13 @@ function Transfer() {
                 );
             }
 
+            // Generate unique idempotency key
             const idempotencyKey =
                 `${Date.now()}-${Math.random()
                     .toString(36)
                     .substring(2, 12)}`;
 
+            // Create transaction
             await createTransaction({
                 fromAccount: senderAccount._id,
                 toAccount: receiver._id,
@@ -129,12 +129,14 @@ function Transfer() {
                 idempotencyKey,
             });
 
+            // Success message
             setSuccess(
                 `₹${Number(amount).toLocaleString(
                     "en-IN"
                 )} sent successfully to ${receiver.name}.`
             );
 
+            // Reset form
             setAmount("");
             setReceiver(null);
             setEmail("");
@@ -219,8 +221,10 @@ function Transfer() {
                             <span className="ml-2 text-xs text-slate-600">
                                 {step === 1 &&
                                     "Choose recipient"}
+
                                 {step === 2 &&
                                     "Enter amount"}
+
                                 {step === 3 &&
                                     "Review transfer"}
                             </span>
@@ -379,8 +383,7 @@ function Transfer() {
                                                 value={amount}
                                                 onChange={(e) =>
                                                     setAmount(
-                                                        e.target
-                                                            .value
+                                                        e.target.value
                                                     )
                                                 }
                                                 placeholder="0"
