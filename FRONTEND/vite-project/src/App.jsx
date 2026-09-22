@@ -1,5 +1,5 @@
 import {
-    BrowserRouter,
+    HashRouter,
     Routes,
     Route,
     Navigate,
@@ -17,7 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
     return (
-        <BrowserRouter>
+        <HashRouter>
             <Routes>
 
                 {/* PUBLIC */}
@@ -104,7 +104,7 @@ function App() {
                 />
 
             </Routes>
-        </BrowserRouter>
+       </HashRouter>
     );
 }
 
