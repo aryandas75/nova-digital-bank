@@ -11,7 +11,7 @@ const app = express();
 app.use(cookieParser());
 app.use(express.json());
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "https://nova-digital-bank-frontend.onrender.com",
     credentials: true,
 }));
 
