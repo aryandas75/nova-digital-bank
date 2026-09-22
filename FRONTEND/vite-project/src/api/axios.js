@@ -7,25 +7,23 @@ const api = axios.create({
         "Content-Type": "application/json",
     },
 });
-
 api.interceptors.response.use(
     (response) => response,
-
     (error) => {
         if (error.response?.status === 401) {
-
             localStorage.removeItem("bankUser");
 
             if (
-                window.location.pathname !== "/login" &&
-                window.location.pathname !== "/register"
+                window.location.hash !== "#/login" &&
+                window.location.hash !== "#/register"
             ) {
-                window.location.replace("/login");
+                window.location.replace("/#/login");
             }
         }
 
         return Promise.reject(error);
     }
 );
+
 
 export default api;
