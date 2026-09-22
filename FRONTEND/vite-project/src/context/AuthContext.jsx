@@ -14,6 +14,7 @@ import {
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+
     const [user, setUser] = useState(() => {
         const savedUser =
             localStorage.getItem("bankUser");
@@ -36,9 +37,13 @@ export const AuthProvider = ({ children }) => {
                     "bankUser",
                     JSON.stringify(data.user)
                 );
+
             } catch (error) {
+
                 setUser(null);
+
                 localStorage.removeItem("bankUser");
+
             } finally {
                 setLoading(false);
             }
@@ -48,6 +53,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (credentials) => {
+
         const data = await loginUser(credentials);
 
         setUser(data.user);
@@ -60,15 +66,36 @@ export const AuthProvider = ({ children }) => {
         return data;
     };
 
+    /*
+     * Used when the current JWT is still valid.
+     */
     const logout = async () => {
+
         try {
             await logoutUser();
+
         } catch (error) {
             console.log("Logout error:", error);
+
         } finally {
+
             setUser(null);
+
             localStorage.removeItem("bankUser");
         }
+    };
+
+    /*
+     * Used after password change.
+     *
+     * The backend invalidates the old JWT when the password
+     * changes, so we don't call the logout API.
+     */
+    const clearAuth = () => {
+
+        setUser(null);
+
+        localStorage.removeItem("bankUser");
     };
 
     return (
@@ -77,6 +104,7 @@ export const AuthProvider = ({ children }) => {
                 user,
                 login,
                 logout,
+                clearAuth,
                 loading,
             }}
         >

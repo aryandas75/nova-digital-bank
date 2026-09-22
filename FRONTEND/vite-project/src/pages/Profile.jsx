@@ -6,7 +6,8 @@ import { changePassword } from "../api/auth.api";
 
 function Profile() {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+
+    const { user, logout, clearAuth } = useAuth();
 
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -40,7 +41,7 @@ function Profile() {
 
             const data = await changePassword({
                 currentPassword,
-                newPassword
+                newPassword,
             });
 
             setSuccess(
@@ -51,9 +52,18 @@ function Profile() {
             setCurrentPassword("");
             setNewPassword("");
 
-            setTimeout(async () => {
-                await logout();
-                navigate("/login");
+            /*
+             * IMPORTANT:
+             *
+             * Changing the password invalidates the current JWT.
+             * Therefore, do NOT call the logout API here.
+             *
+             * Just clear the frontend authentication state
+             * and navigate to the login page.
+             */
+            setTimeout(() => {
+                clearAuth();
+                navigate("/login", { replace: true });
             }, 1500);
 
         } catch (err) {
@@ -61,6 +71,7 @@ function Profile() {
 
             setError(
                 err.response?.data?.message ||
+                err.message ||
                 "Unable to change password."
             );
         } finally {
@@ -71,8 +82,11 @@ function Profile() {
     const handleLogout = async () => {
         try {
             setLogoutLoading(true);
+
             await logout();
-            navigate("/login");
+
+            navigate("/login", { replace: true });
+
         } finally {
             setLogoutLoading(false);
         }
@@ -84,11 +98,13 @@ function Profile() {
                 <Sidebar />
 
                 <main className="min-w-0 flex-1">
+
                     <header className="border-b border-white/8 bg-[#080b0a]/90 px-5 py-5 backdrop-blur-xl sm:px-8">
                         <div className="mx-auto max-w-5xl">
                             <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-600">
                                 Settings
                             </p>
+
                             <h1 className="mt-1 text-xl font-bold">
                                 Profile
                             </h1>
@@ -173,6 +189,7 @@ function Profile() {
                                     <div className="rounded-2xl border border-emerald-400/10 bg-emerald-400/5 p-4">
                                         <div className="flex items-center gap-2">
                                             <span className="h-2 w-2 rounded-full bg-emerald-400" />
+
                                             <p className="text-xs font-bold text-emerald-400">
                                                 Account secured
                                             </p>
@@ -207,6 +224,7 @@ function Profile() {
                                     onSubmit={handlePasswordChange}
                                     className="mt-6 space-y-4"
                                 >
+
                                     <div>
                                         <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                                             Current password
@@ -250,6 +268,7 @@ function Profile() {
                                             ? "Updating..."
                                             : "Update password →"}
                                     </button>
+
                                 </form>
 
                             </div>
